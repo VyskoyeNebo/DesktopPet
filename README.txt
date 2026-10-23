@@ -13,6 +13,10 @@
 2. 默认显示长边 128 个逻辑像素；高 DPI 系统会按系统缩放比例显示。
    右键桌宠或托盘 → 调整大小 → 小号(96)、标准(128)、大号(192)。
    当前大小只作用于本次运行，下次启动恢复标准大小。
+   右键 → 切换形态 → 默认 Q 版 / 蕾米埃尔。
+   蕾米埃尔支持“形态动作”菜单中的两种循环动作，默认动作二。
+   两种形态均支持固定、置顶、隐藏和点击穿透；隐藏或拖动时暂停动作，
+   恢复后沿用暂停时刻，不从头重播。
 3. 左键拖拽，释放后自动缩小或校正到所在屏幕的可用区域。
    右键桌宠或托盘 → 勾选“固定位置”可禁止拖动，取消勾选恢复拖动。
    固定时仍保留轻微浮动动画，显示/隐藏后固定状态继续有效；
@@ -45,8 +49,17 @@ AI 抠图对原图线条有少量重绘；PNG 原始分辨率保留，显示时�
 源码从自身目录读取 pet.png；exe 从 PyInstaller 内置资源目录读取图片。
 若替换图片，源码可直接使用新图；exe 需要重新打包。
 
+蕾米埃尔形态来自用户提供的 Spine 素材，离线渲染后存入 forms\remielle.pet。
+包含两种动作，每种 64 帧，12 fps，尺寸为 384 x 241 / 384 x 246。
+运行时使用 Qt 播放透明帧，不安装或内置 Spine、浏览器或 Node 动画引擎。
+动画按需读取，仅缓存最多 24 张当前显示尺寸的帧，切换动作或大小会清理缓存。
+缺失或损坏的形态文件会提示；后续动画帧损坏时恢复默认形态。
+Windows 原生源码应用播放新形态 6.1 秒后工作集一次采样约 52.08 MiB，
+同一进程默认形态约 50.58 MiB；这不是长期运行峰值或内存上限。
+
 构建
 在 D:\Pet 中执行，确保解释器精确为 3.8.10：
+源码目录需要 main.py、pet_forms.py、pet.png 及 forms\remielle.pet。
   build_x64.bat "C:\对应64位Python目录\python.exe"
   build_x86.bat "C:\对应32位Python目录\python.exe"
   build_debug.bat "C:\对应64位Python目录\python.exe"
@@ -56,11 +69,11 @@ AI 抠图对原图线条有少量重绘；PNG 原始分辨率保留，显示时�
 实际执行的完整打包参数（通过对应解释器 -m PyInstaller）：
 64 位：
   pyinstaller --noconfirm --clean --onefile --windowed --noupx ^
-    --name Pet_x64 --add-data "D:\Pet\pet.png;." ^
+    --name Pet_x64 --add-data "D:\Pet\pet.png;." --add-data "D:\Pet\forms;forms" ^
     --distpath "D:\Pet" --workpath "D:\Pet\build_x64" --specpath "D:\Pet\spec_x64" main.py
 32 位：
   pyinstaller --noconfirm --clean --onefile --windowed --noupx ^
-    --name Pet_x86 --add-data "D:\Pet\pet.png;." ^
+    --name Pet_x86 --add-data "D:\Pet\pet.png;." --add-data "D:\Pet\forms;forms" ^
     --distpath "D:\Pet" --workpath "D:\Pet\build_x86" --specpath "D:\Pet\spec_x86" main.py
 调试版：--console 替代 --windowed，名称 Pet_x64_debug。
 源码、两个正式 exe 和调试 exe 均已实际生成。
@@ -88,6 +101,9 @@ AI 抠图对原图线条有少量重绘；PNG 原始分辨率保留，显示时�
   热键释放及恢复入口不可用的兜底。
   自动测试通过投递 WM_HOTKEY 验证消息处理；实际键盘按键仍需人工复核。
 最终启动检查的体积及主进程工作集见 verification.json。
+新形态源码应用的内存采样见 form-verification.json。
+新形态的 x64 / x86 检查覆盖两种动作、64 帧播放、缓存上限、
+三档尺寸无裁剪、暂停恢复、与固定/置顶/穿透/隐藏状态的联动及异常回退。
 工作集是启动后一次采样，不是内存上限，也不含 onefile 引导进程。
 
 未验证的范围及 Win7 SP1 复核清单
@@ -117,3 +133,5 @@ Windows 全局热键注册及重复按键抑制：
 https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey
 Windows 分层窗口及透明输入命中规则：
 https://learn.microsoft.com/en-us/windows/win32/winmsg/window-features
+Spine 官方离线渲染接口（仅用于开发时生成帧）：
+https://esotericsoftware.com/spine-canvaskit

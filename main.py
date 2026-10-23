@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import traceback
+from collections import OrderedDict
 from pathlib import Path
 
 from PyQt5.QtCore import (
@@ -13,6 +14,7 @@ from PyQt5.QtGui import QGuiApplication, QIcon, QImage, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QLabel, QMenu, QMessageBox, QSystemTrayIcon, QWidget,
 )
+from pet_forms import FramePack
 
 
 def resource_path(name):
@@ -123,6 +125,13 @@ class DesktopPet(QWidget):
         self.setCursor(Qt.OpenHandCursor)
         self._source_pixmap = QPixmap.fromImage(image)
         self._source_pixmap.setDevicePixelRatio(1.0)
+        self._default_pixmap = self._source_pixmap
+        self._form_id = "default"
+        self._form_pack = None
+        self._motion = None
+        self._motion_started_at = 0.0
+        self._frame_index = -1
+        self._frame_cache = OrderedDict()
         self._display_size = 128
         self._pixmap = self._source_pixmap.scaled(
             self._display_size, self._display_size,
@@ -145,15 +154,7 @@ class DesktopPet(QWidget):
         self.label.setStyleSheet("background: transparent;")
         self._set_pixmap(self._pixmap)
 
-        icon_pixmap = QPixmap(32, 32)
-        icon_pixmap.fill(Qt.transparent)
-        thumbnail = self._pixmap.scaled(32, 32, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        painter = QPainter(icon_pixmap)
-        painter.drawPixmap((32 - thumbnail.width()) // 2,
-                           (32 - thumbnail.height()) // 2, thumbnail)
-        painter.end()
-        self.icon = QIcon(icon_pixmap)
-        self.setWindowIcon(self.icon)
+        self._refresh_icon()
 
         self.menu = QMenu(self)
         self.visibility_action = self.menu.addAction("隐藏桌宠")
@@ -168,6 +169,17 @@ class DesktopPet(QWidget):
         self.click_through_action = self.menu.addAction("鼠标点击穿透\tCtrl+Alt+P")
         self.click_through_action.setCheckable(True)
         self.click_through_action.triggered.connect(self.set_click_through)
+        form_menu = self.menu.addMenu("切换形态")
+        self.form_actions = {}
+        for form_id, title in (("default", "默认 Q 版"), ("remielle", "蕾米埃尔")):
+            action = form_menu.addAction(title)
+            action.setCheckable(True)
+            action.setChecked(form_id == self._form_id)
+            action.triggered.connect(lambda _checked=False, key=form_id: self.set_form(key))
+            self.form_actions[form_id] = action
+        self.motion_menu = self.menu.addMenu("形态动作")
+        self.motion_menu.setEnabled(False)
+        self.motion_actions = {}
         size_menu = self.menu.addMenu("调整大小")
         self.size_actions = {}
         for caption, side in (("小号", 96), ("标准", 128), ("大号", 192)):
@@ -205,6 +217,125 @@ class DesktopPet(QWidget):
         self.app.screenAdded.connect(self._connect_screen)
         for current_screen in self.app.screens():
             self._connect_screen(current_screen)
+        self.app.aboutToQuit.connect(self._close_form_assets)
+
+    def _refresh_icon(self):
+        icon_pixmap = QPixmap(32, 32)
+        icon_pixmap.fill(Qt.transparent)
+        thumbnail = self._source_pixmap.scaled(32, 32, Qt.KeepAspectRatio,
+                                               Qt.SmoothTransformation)
+        painter = QPainter(icon_pixmap)
+        painter.drawPixmap((32 - thumbnail.width()) // 2,
+                           (32 - thumbnail.height()) // 2, thumbnail)
+        painter.end()
+        self.icon = QIcon(icon_pixmap)
+        self.setWindowIcon(self.icon)
+        tray = getattr(self, "tray", None)
+        if tray is not None:
+            tray.setIcon(self.icon)
+
+    def _close_form_assets(self):
+        if self._form_pack is not None:
+            self._form_pack.close()
+            self._form_pack = None
+        self._frame_cache.clear()
+
+    def _sync_form_actions(self):
+        for key, action in self.form_actions.items():
+            action.setChecked(key == self._form_id)
+        for key, action in self.motion_actions.items():
+            action.setChecked(key == self._motion)
+
+    def _apply_form_pixmap(self, pixmap):
+        anchor = self.frameGeometry().bottomRight()
+        screen = QGuiApplication.screenAt(self.frameGeometry().center())
+        self._source_pixmap = pixmap
+        self._source_pixmap.setDevicePixelRatio(1.0)
+        self._set_pixmap(pixmap.scaled(self._display_size, self._display_size,
+                                      Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self._place_label(self._animation_time())
+        self.move(anchor.x() - self.width() + 1, anchor.y() - self.height() + 1)
+        self.clamp_to_screen(screen=screen)
+        self._refresh_icon()
+
+    def set_form(self, form_id):
+        if form_id == self._form_id:
+            self._sync_form_actions()
+            return
+        pack = None
+        try:
+            if form_id == "remielle":
+                pack = FramePack(resource_path("forms/remielle.pet"))
+                motion = pack.default_clip
+                pixmap = QPixmap.fromImage(pack.frame_image(motion, 0))
+            elif form_id == "default":
+                motion = None
+                pixmap = self._default_pixmap
+            else:
+                raise ValueError("未知形态。")
+        except Exception as error:
+            if pack is not None:
+                pack.close()
+            self._sync_form_actions()
+            QMessageBox.warning(self, "无法切换形态", str(error))
+            return
+        self._close_form_assets()
+        self._form_id, self._form_pack, self._motion = form_id, pack, motion
+        self._motion_started_at = self._animation_time()
+        self.motion_menu.clear()
+        self.motion_actions = {}
+        self.motion_menu.setEnabled(pack is not None)
+        if pack is not None:
+            for key, clip in pack.clips.items():
+                action = self.motion_menu.addAction(clip["title"])
+                action.setCheckable(True)
+                action.triggered.connect(lambda _checked=False, name=key: self.set_motion(name))
+                self.motion_actions[key] = action
+        self._apply_form_pixmap(pixmap)
+        self._sync_form_actions()
+
+    def set_motion(self, motion):
+        if self._form_pack is None or motion not in self._form_pack.clips:
+            return
+        if motion == self._motion:
+            self._sync_form_actions()
+            return
+        try:
+            pixmap = QPixmap.fromImage(self._form_pack.frame_image(motion, 0))
+        except Exception as error:
+            self._sync_form_actions()
+            QMessageBox.warning(self, "无法切换动作", str(error))
+            return
+        self._motion = motion
+        self._motion_started_at = self._animation_time()
+        self._apply_form_pixmap(pixmap)
+        self._sync_form_actions()
+
+    def _update_form_frame(self, seconds):
+        if self._form_pack is None:
+            return
+        index = self._form_pack.frame_index(self._motion, seconds - self._motion_started_at)
+        if index == self._frame_index:
+            return
+        try:
+            frame = self._frame_cache.get(index)
+            if frame is None:
+                image = self._form_pack.frame_image(self._motion, index)
+                frame = QPixmap.fromImage(image).scaled(
+                    self.label.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                self._frame_cache[index] = frame
+                if len(self._frame_cache) > 24:
+                    self._frame_cache.popitem(last=False)
+            else:
+                self._frame_cache.move_to_end(index)
+            self._pixmap = frame
+            self.label.setPixmap(frame)
+            self._frame_index = index
+        except Exception as error:
+            self.set_form("default")
+            message = str(error)
+            QTimer.singleShot(0, lambda: QMessageBox.warning(
+                self, "形态动画损坏", "已恢复默认形态。\n" + message))
 
     def _connect_screen(self, screen):
         screen.availableGeometryChanged.connect(self._work_area_changed)
@@ -217,6 +348,8 @@ class DesktopPet(QWidget):
             self.clamp_to_screen()
 
     def _set_pixmap(self, pixmap):
+        self._frame_cache.clear()
+        self._frame_index = -1
         self._pixmap = pixmap
         self.setFixedSize(pixmap.width(), pixmap.height() + 6)
         self.label.setPixmap(pixmap)
@@ -357,6 +490,7 @@ class DesktopPet(QWidget):
         self.set_click_through(not self._click_through)
 
     def _place_label(self, seconds):
+        self._update_form_frame(seconds)
         offset = 3.0 * math.sin(2.0 * math.pi * seconds / 2.0)
         self.label.move(0, 3 + int(round(offset)))
 
@@ -440,6 +574,7 @@ class DesktopPet(QWidget):
         self.topmost_action.setChecked(bool(self.windowFlags() & Qt.WindowStaysOnTopHint))
         self.click_through_action.setChecked(self._click_through)
         self.click_through_action.setEnabled(self._click_through or self._can_restore_interaction())
+        self._sync_form_actions()
 
     def _warn_no_tray(self):
         QMessageBox.warning(self, "系统托盘不可用",

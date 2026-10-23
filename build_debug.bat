@@ -10,6 +10,6 @@ if errorlevel 1 exit /b 1
 if errorlevel 1 exit /b 1
 set "PYINSTALLER_CONFIG_DIR=D:\Pet\cache_x64_debug"
 "%PET_PYTHON%" -m PyInstaller --noconfirm --clean --onefile --console --noupx ^
-  --name Pet_x64_debug --add-data "D:\Pet\pet.png;." ^
+  --name Pet_x64_debug --add-data "D:\Pet\pet.png;." --add-data "D:\Pet\forms;forms" ^
   --distpath "D:\Pet" --workpath "D:\Pet\build_x64_debug" --specpath "D:\Pet\spec_x64_debug" main.py
 exit /b %errorlevel%
