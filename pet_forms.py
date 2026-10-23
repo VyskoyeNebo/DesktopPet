@@ -6,7 +6,7 @@ from PyQt5.QtGui import QImage
 
 
 FORM_DEFINITIONS = {
-    "default": {"title": "Q版蕾米", "pack": "forms/qremi.pet", "size": 128},
+    "default": {"title": "Q版蕾米", "pack": "forms/qremi.pet", "size": 192},
     "remielle": {"title": "蕾米埃尔", "pack": "forms/remielle.pet", "size": 384},
     "xingjianya": {"title": "星见雅", "pack": "forms/xingjianya.pet", "size": 384},
     "promeia": {"title": "普罗米娅", "pack": "forms/promeia.pet", "size": 384},

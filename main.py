@@ -180,8 +180,8 @@ class DesktopPet(QWidget):
         self.motion_actions = {}
         size_menu = self.menu.addMenu("调整大小")
         self.size_actions = {}
-        for caption, side in (("小号（96）", 96), ("标准（128）", 128), ("大号（192）", 192),
-                              ("特大（256）", 256), ("超大（384）", 384), ("最大（512）", 512)):
+        for caption, side in (("迷你（96）", 96), ("较小（128）", 128), ("小号（192）", 192),
+                              ("中号（256）", 256), ("大号（384）", 384), ("超大（512）", 512)):
             action = size_menu.addAction(caption)
             action.setCheckable(True)
             action.setChecked(side == self._display_size)

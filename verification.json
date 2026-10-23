@@ -1,8 +1,8 @@
 [
   {
     "arch": "x64",
-    "size_MiB": 109.9,
-    "main_process_working_set_MiB": 62.02,
+    "size_MiB": 109.88,
+    "main_process_working_set_MiB": 59.43,
     "native_qt_platform_loaded": true,
     "duplicate_launches_blocked": 3,
     "embedded_forms_verified": [
@@ -17,7 +17,7 @@
   {
     "arch": "x86",
     "size_MiB": 103.26,
-    "main_process_working_set_MiB": 50.14,
+    "main_process_working_set_MiB": 52.1,
     "native_qt_platform_loaded": true,
     "duplicate_launches_blocked": 3,
     "embedded_forms_verified": [

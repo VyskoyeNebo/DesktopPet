@@ -4,7 +4,7 @@
 
 Python + PyQt5 Windows 桌宠，支持五种形态、透明动画、拖拽、托盘、置顶、固定位置、点击穿透和全局快捷键恢复。
 
-<img src="pet.png" width="128" alt="Q版蕾米">
+<img src="pet.png" width="192" alt="Q版蕾米">
 <img src="forms/remielle-preview.png" width="180" alt="蕾米埃尔">
 <img src="forms/xingjianya-preview.png" width="115" alt="星见雅">
 <img src="forms/promeia-preview.png" width="115" alt="普罗米娅">
@@ -12,13 +12,13 @@ Python + PyQt5 Windows 桌宠，支持五种形态、透明动画、拖拽、托
 
 ## 下载
 
-[下载 v1.2.0 全部版本](https://github.com/VyskoyeNebo/DesktopPet/releases/tag/v1.2.0)
+[下载 v1.2.1 全部版本](https://github.com/VyskoyeNebo/DesktopPet/releases/tag/v1.2.1)
 
 | 文件 | 体积 |
 | --- | --- |
-| [Pet_x64.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x64.exe) | 109.9 MiB |
-| [Pet_x86.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x86.exe) | 103.26 MiB |
-| [Pet_x64_debug.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x64_debug.exe) | 109.89 MiB |
+| [Pet_x64.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.1/Pet_x64.exe) | 109.88 MiB |
+| [Pet_x86.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.1/Pet_x86.exe) | 103.26 MiB |
+| [Pet_x64_debug.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.1/Pet_x64_debug.exe) | 109.89 MiB |
 
 Pet_x64.exe 为 64 位正式版，Pet_x86.exe 为 32 位正式版；Pet_x64_debug.exe 带控制台，供排查问题。三个 exe 内置 Python、Qt 和全部形态，无需安装 Python；目标机器需安装对应位数的 VC++ 2015–2019 运行库。发布页附有 SHA256SUMS.txt，历史 Releases 保留旧版本。
 
@@ -27,7 +27,7 @@ Pet_x64.exe 为 64 位正式版，Pet_x86.exe 为 32 位正式版；Pet_x64_debu
 - **形态**：右键桌宠或托盘 → 切换形态 → Q版蕾米 / 蕾米埃尔 / 星见雅 / 普罗米娅 / 仪玄。
 - **动作**：右键 → 形态动作。Q版默认动作 A，提供静态姿势及其他素材动作；蕾米埃尔有两种循环，默认动作二；其他形态播放各自循环。
 - **取消上下晃动**：所有形态的图片位置固定，已移除程序附加的上下浮动。素材自身的角色动作保留；Q版可选择“静态姿势”。
-- **大小**：96、128、192、256、384、512 六档，单位为逻辑像素。Q版默认 128，其他形态默认 384；各形态分别记忆本次运行的大小。
+- **大小**：96、128、192、256、384、512 六档，单位为逻辑像素。Q版默认 192，其他形态默认 384；各形态分别记忆本次运行的大小。“小号”为 192；96 和 128 保留为“迷你”和“较小”。
 - **拖动 / 固定**：左键拖动；释放后缩小或校正到显示器可用区域。右键勾选“固定位置”禁止拖动。
 - **置顶**：右键“窗口置顶”，默认开启；切换时保留位置、大小和状态。
 - **显示 / 隐藏**：双击托盘或使用菜单。拖动、隐藏时暂停角色动作，恢复后继续。
@@ -42,7 +42,7 @@ Pet_x64.exe 为 64 位正式版，Pet_x86.exe 为 32 位正式版；Pet_x64_debu
 
 | 形态 | 动作与帧数 | 默认显示长边 |
 | --- | --- | --- |
-| Q版蕾米 | 9 个选项，共 318 帧，含 1 帧静态姿势 | 128 |
+| Q版蕾米 | 9 个选项，共 318 帧，含 1 帧静态姿势 | 192 |
 | 蕾米埃尔 | 两种动作，各 64 帧 | 384 |
 | 星见雅 | 128 帧 | 384 |
 | 普罗米娅 | 64 帧 | 384 |
@@ -73,9 +73,9 @@ build_debug.bat "C:\Python38-x64\python.exe"
 
 ## 验证与兼容性
 
-三个版本均在 Windows 11 x64 使用 Python 3.8.10 / PyInstaller 4.10 实际构建。x64 / x86 检查覆盖五形态、14 个动作、718 帧、透明边界、无附加上下浮动、缓存预算、暂停恢复、独立尺寸记忆、关闭旧包以及固定/置顶/穿透/隐藏联动；新增 Q版损坏帧静态回退和重新加载检查。原有拖拽、托盘、锁释放、原生点击穿透和热键消息处理检查保留。
+三个版本均在 Windows 11 x64 使用 Python 3.8.10 / PyInstaller 4.10 实际构建。x64 / x86 检查覆盖五形态、14 个动作、718 帧、透明边界、无附加上下浮动、缓存预算、暂停恢复、独立尺寸记忆、关闭旧包以及固定/置顶/穿透/隐藏联动；新增 Q版损坏帧静态回退和重新加载检查。原有拖拽、托盘、锁释放、原生点击穿透和热键消息处理检查保留。v1.2.1 另复核默认 192、“小号”菜单、高 DPI、各形态尺寸记忆和 exe 启动。
 
-两个正式 exe 均校验全部五个内嵌形态包，并分别以 Q版蕾米 / 仪玄实际启动，各进行 3 次重复或跨位数启动检查。主进程工作集一次采样为 x64 62.02 MiB（Q版）、x86 50.14 MiB（仪玄）。这是一次采样，非长期峰值或内存上限，不含 onefile 引导进程。见 [verification.json](verification.json) 和 [new-forms-verification.json](new-forms-verification.json)；[form-verification.json](form-verification.json) 为历史蕾米埃尔采样。
+两个正式 exe 均校验全部五个内嵌形态包，并分别以 Q版蕾米 / 仪玄实际启动，各进行 3 次重复或跨位数启动检查。主进程工作集一次采样为 x64 59.43 MiB（Q版）、x86 52.1 MiB（仪玄）。这是一次采样，非长期峰值或内存上限，不含 onefile 引导进程。见 [verification.json](verification.json) 和 [new-forms-verification.json](new-forms-verification.json)；[form-verification.json](form-verification.json) 为历史蕾米埃尔采样。
 
 **目标为 Windows 7 SP1，未在 Win7 实测。** PyInstaller 4.10 文档将 Win7 列于正式支持范围之外。请在目标 Win7 SP1 x86 / x64 上复核：
 
