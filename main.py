@@ -132,11 +132,10 @@ class DesktopPet(QWidget):
         self._motion_started_at = 0.0
         self._frame_index = -1
         self._frame_cache = OrderedDict()
-        self._display_size = 128
-        self._pixmap = self._source_pixmap.scaled(
-            self._display_size, self._display_size,
-            Qt.KeepAspectRatio, Qt.SmoothTransformation,
-        )
+        self._form_sizes = {"default": 128, "remielle": 384}
+        self._display_size = self._form_sizes[self._form_id]
+        self._render_scale = max(1.0, self.devicePixelRatioF())
+        self._pixmap = self._scale_for_display(self._source_pixmap)
         self._dragging = False
         self._position_fixed = False
         self._click_through = False
@@ -182,7 +181,8 @@ class DesktopPet(QWidget):
         self.motion_actions = {}
         size_menu = self.menu.addMenu("调整大小")
         self.size_actions = {}
-        for caption, side in (("小号", 96), ("标准", 128), ("大号", 192)):
+        for caption, side in (("小号（96）", 96), ("标准（128）", 128), ("大号（192）", 192),
+                              ("特大（256）", 256), ("超大（384）", 384), ("最大（512）", 512)):
             action = size_menu.addAction(caption)
             action.setCheckable(True)
             action.setChecked(side == self._display_size)
@@ -245,14 +245,34 @@ class DesktopPet(QWidget):
             action.setChecked(key == self._form_id)
         for key, action in self.motion_actions.items():
             action.setChecked(key == self._motion)
+        for side, action in self.size_actions.items():
+            action.setChecked(side == self._display_size)
+
+    def _scale_for_logical_size(self, pixmap, logical_size):
+        physical_size = QSize(max(1, round(logical_size.width() * self._render_scale)),
+                              max(1, round(logical_size.height() * self._render_scale)))
+        result = pixmap.scaled(physical_size, Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        result.setDevicePixelRatio(self._render_scale)
+        return result
+
+    def _scale_for_display(self, pixmap, bounds=None):
+        if bounds is None:
+            bounds = QSize(self._display_size, self._display_size)
+        logical_size = pixmap.size().scaled(bounds, Qt.KeepAspectRatio)
+        return self._scale_for_logical_size(pixmap, logical_size)
+
+    def _ensure_render_scale(self):
+        scale = max(1.0, self.devicePixelRatioF())
+        if abs(scale - self._render_scale) > 0.001:
+            self._render_scale = scale
+            self._set_pixmap(self._scale_for_logical_size(self._source_pixmap, self.label.size()))
 
     def _apply_form_pixmap(self, pixmap):
         anchor = self.frameGeometry().bottomRight()
         screen = QGuiApplication.screenAt(self.frameGeometry().center())
         self._source_pixmap = pixmap
         self._source_pixmap.setDevicePixelRatio(1.0)
-        self._set_pixmap(pixmap.scaled(self._display_size, self._display_size,
-                                      Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self._set_pixmap(self._scale_for_display(pixmap))
         self._place_label(self._animation_time())
         self.move(anchor.x() - self.width() + 1, anchor.y() - self.height() + 1)
         self.clamp_to_screen(screen=screen)
@@ -279,8 +299,10 @@ class DesktopPet(QWidget):
             self._sync_form_actions()
             QMessageBox.warning(self, "无法切换形态", str(error))
             return
+        self._form_sizes[self._form_id] = self._display_size
         self._close_form_assets()
         self._form_id, self._form_pack, self._motion = form_id, pack, motion
+        self._display_size = self._form_sizes[form_id]
         self._motion_started_at = self._animation_time()
         self.motion_menu.clear()
         self.motion_actions = {}
@@ -321,10 +343,12 @@ class DesktopPet(QWidget):
             frame = self._frame_cache.get(index)
             if frame is None:
                 image = self._form_pack.frame_image(self._motion, index)
-                frame = QPixmap.fromImage(image).scaled(
-                    self.label.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+                frame = self._scale_for_logical_size(QPixmap.fromImage(image), self.label.size())
                 self._frame_cache[index] = frame
-                if len(self._frame_cache) > 24:
+                # Bound physical pixel memory as well as frame count at high DPI.
+                frame_bytes = max(1, frame.width() * frame.height() * 4)
+                cache_limit = max(1, min(24, (4 * 1024 * 1024) // frame_bytes))
+                while len(self._frame_cache) > cache_limit:
                     self._frame_cache.popitem(last=False)
             else:
                 self._frame_cache.move_to_end(index)
@@ -351,9 +375,11 @@ class DesktopPet(QWidget):
         self._frame_cache.clear()
         self._frame_index = -1
         self._pixmap = pixmap
-        self.setFixedSize(pixmap.width(), pixmap.height() + 6)
+        ratio = pixmap.devicePixelRatioF()
+        logical_size = QSize(round(pixmap.width() / ratio), round(pixmap.height() / ratio))
+        self.setFixedSize(logical_size.width(), logical_size.height() + 6)
         self.label.setPixmap(pixmap)
-        self.label.setFixedSize(pixmap.size())
+        self.label.setFixedSize(logical_size)
         self.label.move(0, 3)
 
     def clamp_to_screen(self, global_position=None, screen=None):
@@ -368,10 +394,8 @@ class DesktopPet(QWidget):
         if area.width() < 1 or area.height() <= 6:
             return
         if self.width() > area.width() or self.height() > area.height():
-            fitted = self._source_pixmap.scaled(
-                QSize(area.width(), area.height() - 6),
-                Qt.KeepAspectRatio, Qt.SmoothTransformation,
-            )
+            fitted = self._scale_for_display(self._source_pixmap,
+                                             QSize(area.width(), area.height() - 6))
             self._set_pixmap(fitted)
             self._place_label(self._animation_time())
         # Full containment is stronger than retaining only a 30 px clickable strip.
@@ -384,9 +408,8 @@ class DesktopPet(QWidget):
         anchor = self.frameGeometry().bottomRight()
         screen = QGuiApplication.screenAt(self.frameGeometry().center())
         self._display_size = longest_side
-        self._set_pixmap(self._source_pixmap.scaled(
-            longest_side, longest_side, Qt.KeepAspectRatio, Qt.SmoothTransformation,
-        ))
+        self._form_sizes[self._form_id] = longest_side
+        self._set_pixmap(self._scale_for_display(self._source_pixmap))
         self._place_label(self._animation_time())
         self.move(anchor.x() - self.width() + 1, anchor.y() - self.height() + 1)
         self.clamp_to_screen(screen=screen)
@@ -495,6 +518,7 @@ class DesktopPet(QWidget):
         self.label.move(0, 3 + int(round(offset)))
 
     def _animate(self):
+        self._ensure_render_scale()
         self._place_label(self._animation_time())
 
     def _pause_animation(self):
@@ -513,6 +537,7 @@ class DesktopPet(QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
+        self._ensure_render_scale()
         self._resume_animation()
 
     def hideEvent(self, event):
@@ -623,6 +648,11 @@ def main():
         app.setApplicationName("LightweightDesktopPet")
         image = load_pet_image(resource_path("pet.png"))
         pet = DesktopPet(app, image)
+        if "--form" in sys.argv:
+            index = sys.argv.index("--form")
+            if index + 1 >= len(sys.argv) or sys.argv[index + 1] not in ("default", "remielle"):
+                raise ValueError("--form 参数请选择 default 或 remielle。")
+            pet.set_form(sys.argv[index + 1])
         pet.initialize_hotkey()
 
         def handle_exception(exc_type, exc_value, exc_traceback):

@@ -7,13 +7,13 @@
 
 ## 下载
 
-[下载 v1.1.0 全部版本](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/tag/v1.1.0)
+[下载 v1.1.1 全部版本](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/tag/v1.1.1)
 
 | 文件 | 用途 | 体积 |
 | --- | --- | --- |
-| [Pet_x64.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.1.0/Pet_x64.exe) | 64 位 Windows 正式版 | 约 43.59 MiB |
-| [Pet_x86.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.1.0/Pet_x86.exe) | 32 位 Windows 正式版 | 约 36.93 MiB |
-| [Pet_x64_debug.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.1.0/Pet_x64_debug.exe) | 64 位调试版，带控制台 | 约 43.58 MiB |
+| [Pet_x64.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.1.1/Pet_x64.exe) | 64 位 Windows 正式版 | 约 49.56 MiB |
+| [Pet_x86.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.1.1/Pet_x86.exe) | 32 位 Windows 正式版 | 约 42.91 MiB |
+| [Pet_x64_debug.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.1.1/Pet_x64_debug.exe) | 64 位调试版，带控制台 | 约 49.56 MiB |
 
 exe 已内置 Python、Qt 和透明图片，可直接运行。需要目标系统安装对应位数的 VC++ 2015–2019 运行库。发布页附有 `SHA256SUMS.txt` 校验值，源码也可从该页下载。
 
@@ -24,7 +24,7 @@ exe 已内置 Python、Qt 和透明图片，可直接运行。需要目标系统
 - **窗口置顶**：右键菜单切换，默认开启。
 - **切换形态**：右键 → 切换形态 → 默认 Q 版 / 蕾米埃尔。
 - **形态动作**：蕾米埃尔支持两种循环动作，默认动作二；隐藏或拖动时暂停，恢复后继续。
-- **大小**：小号 96、标准 128、大号 192，单位为逻辑像素；默认标准大小。
+- **大小**：96、128、192、256、384、512 六档，单位为逻辑像素；Q 版默认 128，蕾米埃尔默认 384，两种形态分别记忆本次选择。
 - **显示／隐藏**：双击托盘，或使用托盘右键菜单。
 - **点击穿透**：右键菜单开启后，鼠标可直接操作桌宠下方的窗口。
 - **恢复交互**：全局快捷键 `Ctrl+Alt+P` 切换穿透；若被占用，自动尝试 `Ctrl+Alt+Shift+P`，以菜单和托盘提示显示的组合为准。也可在托盘菜单取消穿透。
@@ -51,6 +51,8 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
+也可使用 `Pet_x64.exe --form remielle`，或源码运行 `python main.py --form remielle`，直接打开蕾米埃尔形态。
+
 源码运行时，保留 `main.py`、`pet_forms.py`、`pet.png` 以及 `forms/remielle.pet` 的目录结构。原始图片具有 alpha 通道；加载失败时弹框退出。形态包缺失或损坏时提示并保留/恢复默认外观。
 
 打包脚本使用 `D:\Pet` 作为工作和输出目录，请先将源码、图片、`forms` 目录、依赖文件及三个 `.bat` 脚本放入该目录，再分别运行：
@@ -63,7 +65,9 @@ build_debug.bat "C:\Python38-x64\python.exe"
 
 脚本检查解释器版本及位数，并使用独立构建缓存。正式版采用 `--onefile --windowed --noupx`，调试版采用 `--console`。
 
-蕾米埃尔来自用户提供的 Spine 素材，已离线渲染成透明帧：两种动作各 64 帧、12 fps、最长边 384 像素。程序按需读取并最多缓存 24 张当前显示尺寸的帧；不需要安装 Spine、Node.js、浏览器或额外动画引擎，运行依赖保持不变。
+蕾米埃尔来自用户提供的 Spine 素材，已从骨骼和贴图重新离线渲染成高清透明帧：两种动作各 64 帧、12 fps、最长边 1024 像素，使用高品质 WebP（画质 96）存储。Qt 自带插件负责解码，不需要安装 Spine、Node.js、浏览器或额外动画引擎，运行依赖保持不变。
+
+高 DPI 绘制保留实际像素及 `devicePixelRatio`，例如 200% 下的 384 逻辑像素使用 768 像素图像，避免先缩小再由 Windows 放大造成模糊。缓存同时限制为最多 24 帧、约 4 MiB 像素内存（至少 1 帧），在大小或屏幕缩放变化时重建。
 
 ## 验证与兼容性
 
@@ -73,7 +77,7 @@ build_debug.bat "C:\Python38-x64\python.exe"
 
 新形态的 x64 / x86 检查覆盖两种动作、实际帧变化、缓存上限、三档尺寸无裁剪、暂停恢复、固定/置顶/穿透/隐藏联动和异常回退。
 
-启动后默认形态主进程工作集一次采样约为 x64 50.91 MiB、x86 41.16 MiB；原生源码应用播放新形态 6.1 秒后约 52.08 MiB，同进程默认形态约 50.58 MiB。采样不是内存上限，也不包括 onefile 引导进程，见 [verification.json](verification.json) 和 [form-verification.json](form-verification.json)。
+在 200% 缩放下，通过 `--form remielle` 启动高清形态，主进程工作集一次采样约为 x64 58.54 MiB、x86 48.66 MiB；原生源码应用播放新形态 6.1 秒后约 59.12 MiB，同进程 Q 版约 51.12 MiB。采样不是内存上限，也不包括 onefile 引导进程，见 [verification.json](verification.json) 和 [form-verification.json](form-verification.json)。
 
 **目标为 Windows 7 SP1，但尚未在 Win7 实测。** PyInstaller 4.10 文档表示 Win7 不在其正式支持范围。请在目标 x86 / x64 系统复核透明窗口、系统托盘、单实例、onefile 启动，以及实际点击穿透和全局快捷键恢复；真实多屏与不同 DPI 也需人工复核。
 

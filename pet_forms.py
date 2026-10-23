@@ -22,7 +22,7 @@ class FramePack:
             for clip in self.clips.values():
                 width, height = clip["size"]
                 frames = clip["frames"]
-                if not (1 <= width <= 512 and 1 <= height <= 512):
+                if not (1 <= width <= 1024 and 1 <= height <= 1024):
                     raise ValueError("形态画面尺寸无效。")
                 if not (1 <= clip["fps"] <= 30 and 1 <= len(frames) <= 240):
                     raise ValueError("形态帧率或帧数无效。")
@@ -39,7 +39,7 @@ class FramePack:
 
     def frame_image(self, clip_name, index):
         clip = self.clips[clip_name]
-        image = QImage.fromData(self.archive.read(clip["frames"][index]), "PNG")
+        image = QImage.fromData(self.archive.read(clip["frames"][index]))
         if (image.isNull() or not image.hasAlphaChannel()
                 or [image.width(), image.height()] != clip["size"]):
             raise ValueError("形态动画帧缺失、损坏或没有透明通道。")

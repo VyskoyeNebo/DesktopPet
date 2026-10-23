@@ -1,10 +1,10 @@
 {
-  "default_working_set_MiB": 50.58,
-  "remielle_working_set_MiB": 52.08,
-  "scaled_cached_frames": 24,
+  "default_working_set_MiB": 51.12,
+  "remielle_working_set_MiB": 59.12,
+  "scaled_cached_frames": 2,
   "label_size": [
-    128,
-    82
+    384,
+    245
   ],
   "source": "Windows native source application, 6.1 s animation playback"
 }
