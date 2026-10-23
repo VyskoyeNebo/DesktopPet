@@ -1,151 +1,93 @@
-轻量 Windows 桌宠
-
 文件位置：D:\Pet
-目标：Windows 7 SP1，x86 / x64；安装对应位数的 VC++ 2015–2019 运行库。
-构建环境：Windows 11 专业版 10.0.26200 x64。
-解释器：CPython 3.8.10，分别使用官方 x86 和 x64 解释器。
-核心依赖：PyQt5 5.15.9、Qt 5.15.2、PyInstaller 4.10。
-完整锁定版本见 requirements.txt。
 
-使用
-1. 64 位系统运行 Pet_x64.exe；32 位系统运行 Pet_x86.exe。
-   exe 已内置 Python、Qt 和图片，无需安装 Python，也无需旁放 pet.png。
-2. 默认 Q 版长边 128，蕾米埃尔、星见雅、普罗米娅长边 384，单位为逻辑像素。
-   高 DPI 系统按实际像素生成显示图像，例如 200% 下 384 对应 768 像素。
-   右键桌宠或托盘 → 调整大小 → 96、128、192、256、384、512 六档。
-   四种形态分别记忆本次运行选择的大小，下次启动恢复各自默认值。
-   右键 → 切换形态 → 默认 Q 版 / 蕾米埃尔 / 星见雅 / 普罗米娅。
-   蕾米埃尔支持“形态动作”菜单中的两种循环动作，默认动作二。
-   四种形态均支持固定、置顶、隐藏和点击穿透；隐藏或拖动时暂停动作，
-   恢复后沿用暂停时刻，不从头重播。
-3. 左键拖拽，释放后自动缩小或校正到所在屏幕的可用区域。
-   右键桌宠或托盘 → 勾选“固定位置”可禁止拖动，取消勾选恢复拖动。
-   固定时仍保留轻微浮动动画，显示/隐藏后固定状态继续有效；
-   下次重新启动默认允许拖动。
-4. 托盘双击显示/隐藏；右键菜单也可显示/隐藏或退出。
-   系统托盘不可用时会警告并禁用隐藏入口。
-   右键桌宠或托盘 → “窗口置顶”：默认勾选，保持在普通窗口之上；
-   取消勾选后恢复普通窗口层级，再次勾选即可置顶。
-   切换时保留当前位置、大小和固定状态；隐藏中的桌宠保持隐藏。
-   下次重新启动默认启用置顶。
-   右键桌宠或托盘 → “鼠标点击穿透”：开启后，鼠标操作会穿过桌宠，
-   到达下方窗口，无法直接拖动或右键桌宠；托盘菜单仍可操作。
-   全局快捷键 Ctrl+Alt+P 切换穿透/可交互，无需桌宠位于前台。
-   如果该组合被占用，自动尝试 Ctrl+Alt+Shift+P，并在托盘通知、
-   托盘提示及菜单中标明实际快捷键。实际可用组合以菜单显示为准。
-   按住快捷键不会因键盘自动重复而连续切换。
-   两组快捷键都注册失败时会提示；仍可通过托盘取消穿透。
-   全局快捷键和托盘都不可用时禁止开启穿透，避免无法恢复操作。
-   默认关闭穿透；隐藏、置顶和固定功能与穿透状态独立。
-   热键随程序退出释放，未增加第三方依赖。
-5. x86、x64、源码和调试版共用同一用户的单实例锁。
-   多次启动只保留一个主程序实例。onefile 本身有引导和主进程，
-   任务管理器中看到同一次启动的两个进程属于 PyInstaller 的正常结构。
+# DesktopPet
 
-图片
-pet.png 为真正带 alpha 的 PNG，512 x 494 像素；背景角点 alpha=0。
-使用内置 image_gen 做背景提取，生成结果经 QImage 等比缩小并校验。
-AI 抠图对原图线条有少量重绘；PNG 原始分辨率保留，显示时另行缩放。
-原始 JPG 保持不变。完整编辑提示词见 image-edit-prompt.txt。
-源码从自身目录读取 pet.png；exe 从 PyInstaller 内置资源目录读取图片。
-若替换图片，源码可直接使用新图；exe 需要重新打包。
+Python + PyQt5 Windows 桌宠，支持五种形态、透明动画、拖拽、托盘、置顶、固定位置、点击穿透和全局快捷键恢复。
 
-蕾米埃尔形态来自用户提供的 Spine 素材，离线渲染后存入 forms\remielle.pet。
-包含两种动作，每种 64 帧，12 fps，尺寸为 1024 x 641 / 1024 x 655。
-动画从原始骨骼与贴图重新渲染，以高品质透明 WebP（画质 96）存储，
-由 Qt 自带 WebP 插件解码。窗口图像保留真实 DPI 像素及 devicePixelRatio，
-避免先缩成逻辑像素、再被 Windows 放大造成模糊。
-运行时使用 Qt 播放透明帧，不安装或内置 Spine、浏览器或 Node 动画引擎。
-动画按需读取，缓存最多 24 帧并限制约 4 MiB 像素内存（至少保留 1 帧）。
-切换动作、大小或屏幕缩放比例会清理并重建缓存。
-缺失或损坏的形态文件会提示；后续动画帧损坏时恢复默认形态。
-Windows 原生源码应用在 200% 缩放下播放新形态 6.1 秒后，工作集一次采样
-约 59.12 MiB，同一进程默认形态约 51.12 MiB；这不是长期峰值或内存上限。
-也可使用 Pet_x64.exe --form remielle / xingjianya / promeia 直接启动对应形态。
-星见雅：128 帧，12 fps，738 x 1024；普罗米娅：64 帧，12 fps，655 x 1024。
-新增形态同样来自原始骨骼与贴图离线渲染，保持透明与高 DPI 绘制。
-每次仅打开当前形态包，切换时关闭之前的资源并清空帧缓存。
-四形态使内置资源体积增加，最新 exe 体积以发布页及 verification.json 为准。
+<img src="pet.png" width="128" alt="Q版蕾米">
+<img src="forms/remielle-preview.png" width="180" alt="蕾米埃尔">
+<img src="forms/xingjianya-preview.png" width="115" alt="星见雅">
+<img src="forms/promeia-preview.png" width="115" alt="普罗米娅">
+<img src="forms/yixuan-preview.png" width="115" alt="仪玄">
 
-构建
-在 D:\Pet 中执行，确保解释器精确为 3.8.10：
-源码目录需要 main.py、pet_forms.py、pet.png 及完整 forms 目录中的三个 .pet 文件。
-  build_x64.bat "C:\对应64位Python目录\python.exe"
-  build_x86.bat "C:\对应32位Python目录\python.exe"
-  build_debug.bat "C:\对应64位Python目录\python.exe"
-不传解释器路径时，脚本尝试 py -3.8-64 或 py -3.8-32。
-脚本会检查版本与位数，安装锁定依赖，分别使用独立构建缓存。
+## 下载
 
-实际执行的完整打包参数（通过对应解释器 -m PyInstaller）：
-64 位：
-  pyinstaller --noconfirm --clean --onefile --windowed --noupx ^
-    --name Pet_x64 --add-data "D:\Pet\pet.png;." --add-data "D:\Pet\forms;forms" ^
-    --distpath "D:\Pet" --workpath "D:\Pet\build_x64" --specpath "D:\Pet\spec_x64" main.py
-32 位：
-  pyinstaller --noconfirm --clean --onefile --windowed --noupx ^
-    --name Pet_x86 --add-data "D:\Pet\pet.png;." --add-data "D:\Pet\forms;forms" ^
-    --distpath "D:\Pet" --workpath "D:\Pet\build_x86" --specpath "D:\Pet\spec_x86" main.py
-调试版：--console 替代 --windowed，名称 Pet_x64_debug。
-源码、两个正式 exe 和调试 exe 均已实际生成。
+[下载 v1.2.0 全部版本](https://github.com/VyskoyeNebo/DesktopPet/releases/tag/v1.2.0)
 
-已验证的范围
-- x64 和 x86 各 8 项 Qt 自动检查通过（使用 offscreen 测试平台）：
-  alpha 与尺寸、窗口属性、QLabel 鼠标穿透属性、整个动画周期无裁剪、
-  大小菜单、固定后禁止拖动及取消固定后恢复、拖拽实时位移、
-  释放校正、负坐标小屏缩放及主屏回退、
-  暂停/恢复时间和相位、托盘双击只切换一次、菜单显示文字、
-  无托盘时禁用隐藏并警告、异常图片、退出顺序。
-- 正常退出、图片缺失、图片损坏、QApplication 创建失败场景中，
-  锁均可再次获取；错误弹框调用经过检查，自动测试中拦截了弹框显示。
-- x64 持锁时 x86 不能取得锁；超过 30 秒后仍不能夺取活实例的锁。
-- 两个正式 exe 均在 Windows 11 上实际启动，加载 qwindows.dll 和
-  Qt5Widgets.dll；分别重复及跨位数启动 3 次，新增启动均正常退出。
-- exe PE 架构、内嵌 pet.png 和 qwindows.dll 均已检查。
-- x64 / x86 均通过 Windows 原生扩展样式检查：窗口置顶开关会实际
-  添加/移除 WS_EX_TOPMOST，同时保留工具窗口属性；切换前后位置、
-  大小、固定状态、显示/隐藏状态和动画相位保持正确。
-- x64 / x86 均通过实际 Windows 输入命中测试：穿透前可命中桌宠，
-  穿透后同一位置不再命中桌宠；原生透明输入样式已设置。
-  已验证全局热键注册及 WM_HOTKEY 消息经 Qt 事件循环切换状态、
-  重建窗口后快捷键仍有效、托盘共用菜单仍可取消穿透、
-  热键释放及恢复入口不可用的兜底。
-  自动测试通过投递 WM_HOTKEY 验证消息处理；实际键盘按键仍需人工复核。
-最终启动检查的体积及主进程工作集见 verification.json。
-蕾米埃尔源码应用的内存采样见 form-verification.json；
-星见雅和普罗米娅的原生 DPI 与内存采样见 new-forms-verification.json。
-新形态的 x64 / x86 检查覆盖两种动作、64 帧播放、缓存上限、
-三档尺寸无裁剪、暂停恢复、与固定/置顶/穿透/隐藏状态的联动及异常回退。
-新增两种形态已在 x64 / x86 检查全部 128 / 64 帧、透明及边界、
-缓存预算、独立尺寸记忆、资源关闭和固定/置顶/穿透/隐藏联动。
-两个正式 exe 分别以星见雅和普罗米娅启动，并校验全部三个内嵌形态包。
-工作集是启动后一次采样，不是内存上限，也不含 onefile 引导进程。
+| 文件 | 体积 |
+| --- | --- |
+| [Pet_x64.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x64.exe) | 109.9 MiB |
+| [Pet_x86.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x86.exe) | 103.26 MiB |
+| [Pet_x64_debug.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x64_debug.exe) | 109.89 MiB |
 
-未验证的范围及 Win7 SP1 复核清单
-本机不是 Win7，未在 Win7 SP1 实测，不能据此保证 Win7 兼容。
-PyInstaller 4.10 官方说明 Windows 7 可能工作，但不在其支持范围内。
-需要在目标 Win7 SP1 x86 / x64 机器复核：
-1. 安装相应架构的 VC++ 2015–2019 运行库后，onefile 首次和重复启动；
-   检查临时解包目录权限、启动耗时、是否缺少运行库/DLL。
-2. 透明窗口边缘、白色角色部位、置顶、不占任务栏、高 DPI 显示；
-   包括目标机器的 Aero / 桌面合成设置。
-3. 系统托盘出现、显示/隐藏、双击只切换一次、右键退出及无托盘兜底。
-4. 多次启动和跨位数启动只出现一个桌宠；正常及异常退出后再次启动。
-5. 在真实多显示器、不同 DPI、负坐标屏幕上拖拽、释放和屏幕断开；
-   当前多屏边界检查使用模拟几何，未进行真实多屏人工拖拽。
-6. 图片缺失/损坏时弹框可见，关闭弹框后程序退出且锁释放。
-   测试源码时可临时移动 pet.png 后运行 main.py；exe 图片已内置。
-7. 长时间运行的内存和动画、休眠唤醒后的行为。
-8. 点击穿透是否能点击下方其他应用；后台按菜单所示全局快捷键恢复；
-   按住不重复切换；托盘菜单恢复；快捷键冲突及无托盘时的兜底。
+Pet_x64.exe 为 64 位正式版，Pet_x86.exe 为 32 位正式版；Pet_x64_debug.exe 带控制台，供排查问题。三个 exe 内置 Python、Qt 和全部形态，无需安装 Python；目标机器需安装对应位数的 VC++ 2015–2019 运行库。发布页附有 SHA256SUMS.txt，历史 Releases 保留旧版本。
 
-参考资料
-Python 3.8.10 官方发行及 x86/x64 安装器：
-https://www.python.org/downloads/release/python-3810/
-PyInstaller 4.10 的系统要求和 Win7 支持说明：
-https://pyinstaller.org/en/v4.10/requirements.html
-Windows 全局热键注册及重复按键抑制：
-https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey
-Windows 分层窗口及透明输入命中规则：
-https://learn.microsoft.com/en-us/windows/win32/winmsg/window-features
-Spine 官方离线渲染接口（仅用于开发时生成帧）：
-https://esotericsoftware.com/spine-canvaskit
+## 操作
+
+- **形态**：右键桌宠或托盘 → 切换形态 → Q版蕾米 / 蕾米埃尔 / 星见雅 / 普罗米娅 / 仪玄。
+- **动作**：右键 → 形态动作。Q版默认动作 A，提供静态姿势及其他素材动作；蕾米埃尔有两种循环，默认动作二；其他形态播放各自循环。
+- **取消上下晃动**：所有形态的图片位置固定，已移除程序附加的上下浮动。素材自身的角色动作保留；Q版可选择“静态姿势”。
+- **大小**：96、128、192、256、384、512 六档，单位为逻辑像素。Q版默认 128，其他形态默认 384；各形态分别记忆本次运行的大小。
+- **拖动 / 固定**：左键拖动；释放后缩小或校正到显示器可用区域。右键勾选“固定位置”禁止拖动。
+- **置顶**：右键“窗口置顶”，默认开启；切换时保留位置、大小和状态。
+- **显示 / 隐藏**：双击托盘或使用菜单。拖动、隐藏时暂停角色动作，恢复后继续。
+- **穿透 / 恢复**：右键开启“鼠标点击穿透”，鼠标可操作下方窗口。全局热键 Ctrl+Alt+P 切换穿透；若冲突自动尝试 Ctrl+Alt+Shift+P，以菜单和托盘显示为准。也可在托盘取消穿透。按住热键不会因自动重复而反复切换。
+- **退出**：桌宠或托盘右键 → 退出程序。
+
+托盘不可用会提示并禁用隐藏。托盘和热键同时不可用时禁止开启穿透。默认允许拖动、置顶、关闭穿透；设置保留到本次运行结束。x64、x86、源码与调试版共用单实例锁。onefile 启动时可能出现引导和主程序两个进程。
+
+## 动画与清晰度
+
+全部形态来自用户提供的 Spine 骨骼与贴图，开发时离线渲染为高品质透明 WebP（画质 96、12 fps、最长边 1024 像素）。Q版已替换为新提供的 Q版蕾米素材，静态备用 pet.png 为带 alpha 的 475 × 512 PNG。
+
+| 形态 | 动作与帧数 | 默认显示长边 |
+| --- | --- | --- |
+| Q版蕾米 | 9 个选项，共 318 帧，含 1 帧静态姿势 | 128 |
+| 蕾米埃尔 | 两种动作，各 64 帧 | 384 |
+| 星见雅 | 128 帧 | 384 |
+| 普罗米娅 | 64 帧 | 384 |
+| 仪玄 | 80 帧 | 384 |
+
+Qt 自带 WebP 插件解码；运行时无需 Spine、Node.js、浏览器或额外动画引擎。保留实际 DPI 像素及 devicePixelRatio，例如 200% 缩放下 384 逻辑像素对应 768 像素图像。缓存最多 24 帧并限制约 4 MiB 像素内存（至少 1 帧）；切换形态关闭旧包并清空缓存。高清形态会增加 exe 体积。
+
+## 源码与构建
+
+使用对应位数的 **CPython 3.8.10**，核心依赖为 PyQt5 5.15.9、Qt 5.15.2、PyInstaller 4.10，完整版本见 [requirements.txt](requirements.txt)。
+
+```bat
+python -m pip install -r requirements.txt
+python main.py
+```
+
+保留 main.py、pet_forms.py、pet.png 和 forms 目录中的五个 .pet 文件。可用 --form default / remielle / xingjianya / promeia / yixuan 直接启动指定形态，例如 `Pet_x64.exe --form yixuan`。图片缺失、损坏或不带 alpha 时提示并退出；形态包加载失败时提示，损坏动画帧恢复 Q版静态备用图，再次选择 Q版可重试加载。
+
+将源码、资源、依赖与三个脚本放入 D:\Pet，再分别运行：
+
+```bat
+build_x64.bat "C:\Python38-x64\python.exe"
+build_x86.bat "C:\Python38-x86\python.exe"
+build_debug.bat "C:\Python38-x64\python.exe"
+```
+
+脚本检查版本和位数、安装锁定依赖，使用独立缓存；正式版使用 --onefile --windowed --noupx，调试版使用 --console。32 位 exe 必须用 32 位 Python 构建。
+
+## 验证与兼容性
+
+三个版本均在 Windows 11 x64 使用 Python 3.8.10 / PyInstaller 4.10 实际构建。x64 / x86 检查覆盖五形态、14 个动作、718 帧、透明边界、无附加上下浮动、缓存预算、暂停恢复、独立尺寸记忆、关闭旧包以及固定/置顶/穿透/隐藏联动；新增 Q版损坏帧静态回退和重新加载检查。原有拖拽、托盘、锁释放、原生点击穿透和热键消息处理检查保留。
+
+两个正式 exe 均校验全部五个内嵌形态包，并分别以 Q版蕾米 / 仪玄实际启动，各进行 3 次重复或跨位数启动检查。主进程工作集一次采样为 x64 62.02 MiB（Q版）、x86 50.14 MiB（仪玄）。这是一次采样，非长期峰值或内存上限，不含 onefile 引导进程。见 [verification.json](verification.json) 和 [new-forms-verification.json](new-forms-verification.json)；[form-verification.json](form-verification.json) 为历史蕾米埃尔采样。
+
+**目标为 Windows 7 SP1，未在 Win7 实测。** PyInstaller 4.10 文档将 Win7 列于正式支持范围之外。请在目标 Win7 SP1 x86 / x64 上复核：
+
+1. 对应架构 VC++ 2015–2019 运行库、onefile 首次及重复启动、解包权限和缺少 DLL 的情况。
+2. 透明窗口、边缘、置顶、不占任务栏，以及 Aero / 桌面合成与高 DPI 显示。
+3. 托盘显示、隐藏、双击只切换一次、右键退出及无托盘兜底。
+4. 多次和跨位数启动、异常退出后的锁释放。
+5. 真实多屏、不同 DPI、负坐标屏幕、拖动释放、显示器断开和尺寸兜底。
+6. 图片与动画损坏时弹框可见、静态回退、正常退出和重新启动。
+7. 点击穿透下方应用、实际键盘快捷键恢复、按住不重复触发和热键冲突；自动测试的热键部分通过投递 WM_HOTKEY 检查，仍需真人按键复核。
+8. 长时间运行内存、动画、休眠唤醒。真实多屏及 Win7 的这些项目尚未实测。
+
+历史 AI 抠图提示词保留于 image-edit-prompt.txt，仅对应旧版本图片，当前 Q版来自新素材。
+
+参考：[Python 3.8.10](https://www.python.org/downloads/release/python-3810/)、[PyInstaller 4.10 系统要求](https://pyinstaller.org/en/v4.10/requirements.html)、[Windows RegisterHotKey](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerhotkey)、[Spine 离线渲染接口](https://esotericsoftware.com/spine-canvaskit)。

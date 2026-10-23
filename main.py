@@ -1,5 +1,4 @@
 """Windows desktop pet. Build with CPython 3.8.10 and requirements.txt."""
-import math
 import os
 import sys
 import tempfile
@@ -218,6 +217,7 @@ class DesktopPet(QWidget):
         for current_screen in self.app.screens():
             self._connect_screen(current_screen)
         self.app.aboutToQuit.connect(self._close_form_assets)
+        self.set_form("default")
 
     def _refresh_icon(self):
         icon_pixmap = QPixmap(32, 32)
@@ -278,8 +278,10 @@ class DesktopPet(QWidget):
         self.clamp_to_screen(screen=screen)
         self._refresh_icon()
 
-    def set_form(self, form_id):
-        if form_id == self._form_id:
+    def set_form(self, form_id, static_fallback=False):
+        if (form_id == self._form_id and not static_fallback
+                and (self._form_pack is not None
+                     or FORM_DEFINITIONS.get(form_id, {}).get("pack") is None)):
             self._sync_form_actions()
             return
         pack = None
@@ -287,7 +289,7 @@ class DesktopPet(QWidget):
             if form_id not in FORM_DEFINITIONS:
                 raise ValueError("未知形态。")
             definition = FORM_DEFINITIONS[form_id]
-            if definition["pack"] is not None:
+            if definition["pack"] is not None and not static_fallback:
                 pack = FramePack(resource_path(definition["pack"]))
                 motion = pack.default_clip
                 pixmap = QPixmap.fromImage(pack.frame_image(motion, 0))
@@ -357,10 +359,10 @@ class DesktopPet(QWidget):
             self.label.setPixmap(frame)
             self._frame_index = index
         except Exception as error:
-            self.set_form("default")
+            self.set_form("default", static_fallback=True)
             message = str(error)
             QTimer.singleShot(0, lambda: QMessageBox.warning(
-                self, "形态动画损坏", "已恢复默认形态。\n" + message))
+                self, "形态动画损坏", "已恢复默认静态形态。\n" + message))
 
     def _connect_screen(self, screen):
         screen.availableGeometryChanged.connect(self._work_area_changed)
@@ -515,8 +517,7 @@ class DesktopPet(QWidget):
 
     def _place_label(self, seconds):
         self._update_form_frame(seconds)
-        offset = 3.0 * math.sin(2.0 * math.pi * seconds / 2.0)
-        self.label.move(0, 3 + int(round(offset)))
+        self.label.move(0, 3)
 
     def _animate(self):
         self._ensure_render_scale()

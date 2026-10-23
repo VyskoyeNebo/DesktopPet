@@ -1,5 +1,19 @@
 [
   {
+    "form": "default",
+    "dpr": 2.0,
+    "logical_size": [
+      118,
+      128
+    ],
+    "physical_size": [
+      236,
+      256
+    ],
+    "cached_frames": 17,
+    "working_set_MiB": 59.24
+  },
+  {
     "form": "xingjianya",
     "dpr": 2.0,
     "logical_size": [
@@ -11,7 +25,7 @@
       768
     ],
     "cached_frames": 2,
-    "working_set_MiB": 60.09
+    "working_set_MiB": 60.41
   },
   {
     "form": "promeia",
@@ -25,6 +39,20 @@
       768
     ],
     "cached_frames": 2,
-    "working_set_MiB": 59.18
+    "working_set_MiB": 59.49
+  },
+  {
+    "form": "yixuan",
+    "dpr": 2.0,
+    "logical_size": [
+      287,
+      384
+    ],
+    "physical_size": [
+      574,
+      768
+    ],
+    "cached_frames": 2,
+    "working_set_MiB": 67.25
   }
 ]
