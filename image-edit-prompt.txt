@@ -1,0 +1,4 @@
+Mode: built-in image_gen; transparent_background=true.
+Input: User-provided JPG reference illustration.
+
+Use case: background-extraction. Edit target: attached original chibi illustration. Remove only the plain beige/gray exterior background, including exterior gaps between parts, to genuine alpha transparency. Preserve the original pink-haired chibi character, face, expression, dark hand-drawn outlines, white wings, white clothing and shoes, pose, colors and composition as closely as possible. White character elements must remain opaque. Keep every existing body part and the small accessories; no additions or redesign. Clean antialiased cutout edges, no background halo or added shadow, no text. Output PNG with an actual transparent background, suitable for a Windows desktop pet.

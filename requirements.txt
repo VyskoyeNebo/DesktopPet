@@ -1,0 +1,12 @@
+# Interpreter: CPython 3.8.10 (use matching x64 / x86 interpreter)
+PyQt5==5.15.9
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.12.2
+PyInstaller==4.10
+# Reproducible build dependencies compatible with Python 3.8 / PyInstaller 4.
+pyinstaller-hooks-contrib==2022.3
+setuptools==59.8.0
+altgraph==0.17.2
+pefile==2021.9.3
+pywin32-ctypes==0.2.0
+future==0.18.3
