@@ -9,13 +9,13 @@
 
 ## 下载
 
-[下载 v1.2.0 全部版本](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/tag/v1.2.0)
+[下载 v1.2.0 全部版本](https://github.com/VyskoyeNebo/DesktopPet/releases/tag/v1.2.0)
 
 | 文件 | 用途 | 体积 |
 | --- | --- | --- |
-| [Pet_x64.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.2.0/Pet_x64.exe) | 64 位 Windows 正式版 | 约 68.47 MiB |
-| [Pet_x86.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.2.0/Pet_x86.exe) | 32 位 Windows 正式版 | 约 61.80 MiB |
-| [Pet_x64_debug.exe](https://github.com/GGAAOOTTIIAANN/DesktopPet/releases/download/v1.2.0/Pet_x64_debug.exe) | 64 位调试版，带控制台 | 约 68.46 MiB |
+| [Pet_x64.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x64.exe) | 64 位 Windows 正式版 | 约 68.47 MiB |
+| [Pet_x86.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x86.exe) | 32 位 Windows 正式版 | 约 61.80 MiB |
+| [Pet_x64_debug.exe](https://github.com/VyskoyeNebo/DesktopPet/releases/download/v1.2.0/Pet_x64_debug.exe) | 64 位调试版，带控制台 | 约 68.46 MiB |
 
 exe 已内置 Python、Qt 和透明图片，可直接运行。需要目标系统安装对应位数的 VC++ 2015–2019 运行库。发布页附有 `SHA256SUMS.txt` 校验值，源码也可从该页下载。
 
