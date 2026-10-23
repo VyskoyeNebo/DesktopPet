@@ -1,0 +1,30 @@
+[
+  {
+    "form": "xingjianya",
+    "dpr": 2.0,
+    "logical_size": [
+      276,
+      384
+    ],
+    "physical_size": [
+      552,
+      768
+    ],
+    "cached_frames": 2,
+    "working_set_MiB": 60.09
+  },
+  {
+    "form": "promeia",
+    "dpr": 2.0,
+    "logical_size": [
+      245,
+      384
+    ],
+    "physical_size": [
+      490,
+      768
+    ],
+    "cached_frames": 2,
+    "working_set_MiB": 59.18
+  }
+]

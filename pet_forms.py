@@ -5,6 +5,14 @@ import zipfile
 from PyQt5.QtGui import QImage
 
 
+FORM_DEFINITIONS = {
+    "default": {"title": "默认 Q 版", "pack": None, "size": 128},
+    "remielle": {"title": "蕾米埃尔", "pack": "forms/remielle.pet", "size": 384},
+    "xingjianya": {"title": "星见雅", "pack": "forms/xingjianya.pet", "size": 384},
+    "promeia": {"title": "普罗米娅", "pack": "forms/promeia.pet", "size": 384},
+}
+
+
 class FramePack:
     def __init__(self, path):
         self.archive = zipfile.ZipFile(str(path), "r")

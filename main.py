@@ -14,7 +14,7 @@ from PyQt5.QtGui import QGuiApplication, QIcon, QImage, QPainter, QPixmap
 from PyQt5.QtWidgets import (
     QApplication, QLabel, QMenu, QMessageBox, QSystemTrayIcon, QWidget,
 )
-from pet_forms import FramePack
+from pet_forms import FORM_DEFINITIONS, FramePack
 
 
 def resource_path(name):
@@ -132,7 +132,7 @@ class DesktopPet(QWidget):
         self._motion_started_at = 0.0
         self._frame_index = -1
         self._frame_cache = OrderedDict()
-        self._form_sizes = {"default": 128, "remielle": 384}
+        self._form_sizes = {key: value["size"] for key, value in FORM_DEFINITIONS.items()}
         self._display_size = self._form_sizes[self._form_id]
         self._render_scale = max(1.0, self.devicePixelRatioF())
         self._pixmap = self._scale_for_display(self._source_pixmap)
@@ -170,8 +170,8 @@ class DesktopPet(QWidget):
         self.click_through_action.triggered.connect(self.set_click_through)
         form_menu = self.menu.addMenu("切换形态")
         self.form_actions = {}
-        for form_id, title in (("default", "默认 Q 版"), ("remielle", "蕾米埃尔")):
-            action = form_menu.addAction(title)
+        for form_id, definition in FORM_DEFINITIONS.items():
+            action = form_menu.addAction(definition["title"])
             action.setCheckable(True)
             action.setChecked(form_id == self._form_id)
             action.triggered.connect(lambda _checked=False, key=form_id: self.set_form(key))
@@ -284,15 +284,16 @@ class DesktopPet(QWidget):
             return
         pack = None
         try:
-            if form_id == "remielle":
-                pack = FramePack(resource_path("forms/remielle.pet"))
+            if form_id not in FORM_DEFINITIONS:
+                raise ValueError("未知形态。")
+            definition = FORM_DEFINITIONS[form_id]
+            if definition["pack"] is not None:
+                pack = FramePack(resource_path(definition["pack"]))
                 motion = pack.default_clip
                 pixmap = QPixmap.fromImage(pack.frame_image(motion, 0))
-            elif form_id == "default":
+            else:
                 motion = None
                 pixmap = self._default_pixmap
-            else:
-                raise ValueError("未知形态。")
         except Exception as error:
             if pack is not None:
                 pack.close()
@@ -650,8 +651,8 @@ def main():
         pet = DesktopPet(app, image)
         if "--form" in sys.argv:
             index = sys.argv.index("--form")
-            if index + 1 >= len(sys.argv) or sys.argv[index + 1] not in ("default", "remielle"):
-                raise ValueError("--form 参数请选择 default 或 remielle。")
+            if index + 1 >= len(sys.argv) or sys.argv[index + 1] not in FORM_DEFINITIONS:
+                raise ValueError("--form 参数请选择：" + " / ".join(FORM_DEFINITIONS))
             pet.set_form(sys.argv[index + 1])
         pet.initialize_hotkey()
 
